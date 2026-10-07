@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: kunalraj-minitaskmanager-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: minitaskmanager-db
+          property: connectionString
+      - key: CORS_ORIGIN_REGEX
+        value: https://.*\.onrender\.com
+      - key: JWT_SECRET
+        generateValue: true
+
+  - type: web
+    name: kunalraj-minitaskmanager
+    runtime: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm run start -- -p $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Public URL of the API service above. If Render appends a suffix because the
+      # name is taken, update this value to the actual API URL and redeploy.
+      - key: NEXT_PUBLIC_API_URL
+        value: https://kunalraj-minitaskmanager-api.onrender.com
+
+databases:
+  - name: minitaskmanager-db
+    plan: free
